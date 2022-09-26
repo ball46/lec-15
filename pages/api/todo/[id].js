@@ -1,7 +1,16 @@
 import { readTodolistDB, writeTodolistDB } from "../../../backendLibs/dbLib";
+import checkToken from "../../../backendLibs/checkToken";
 
 export default function todoIdRoute(req, res) {
   if (req.method === "DELETE") {
+    //checkToken
+    const username = checkToken(req);
+    if (!username)
+      return res.status(401).json({
+        ok: false,
+        message: "You don't permission to access this api",
+      });
+
     const todolist = readTodolistDB();
     const id = req.query.id;
 
@@ -11,11 +20,24 @@ export default function todoIdRoute(req, res) {
         .status(404)
         .json({ ok: false, message: "Todo ID does not exist" });
 
+    if (todolist[todoIdx].username !== username)
+      return res.status(403).json({
+        ok: false,
+        message: "You don't permission to access this data",
+      });
     todolist.splice(todoIdx, 1);
     writeTodolistDB(todolist);
 
     return res.json({ ok: true, id });
   } else if (req.method === "PUT") {
+    //checkToken
+    const username = checkToken(req);
+    if (!username)
+      return res.status(401).json({
+        ok: false,
+        message: "You don't permission to access this api",
+      });
+
     const todolist = readTodolistDB();
     const id = req.query.id;
 
@@ -28,6 +50,12 @@ export default function todoIdRoute(req, res) {
       return res
         .status(404)
         .json({ ok: false, message: "Todo ID does not exist" });
+
+    if (todolist[todoIdx].username !== username)
+      return res.status(403).json({
+        ok: false,
+        message: "You don't permission to access this data",
+      });
 
     todolist[todoIdx].completed = req.body.completed;
     writeTodolistDB(todolist);
